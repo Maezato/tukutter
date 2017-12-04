@@ -11,13 +11,13 @@ def index():
 
 @application.route('/top')
 def top():
-    #一番重いんで、あとで！
+    #一番重いから、あとで！
     #mysqlに接続する 　以下のdbとconは変数
     db = MySQLdb.connect( user='root', passwd='Karinon04011006@', host='localhost', db='tukutter', charset='utf8')
     con = db.cursor()
 
     #全部のタスクを表示する
-    sql = 'select * from '
+    sql = 'select * from user'
     con.execute(sql)
 
     #値を2次元配列で取得。
@@ -28,13 +28,13 @@ def top():
     con.close()
 
     #一覧のデータをmake_table.htmlに渡して、ループで表示させる
-    return render_template('make_table.html', rows=result)
+    return render_template('top.html', rows=result)
 
-@application.route('/top')
+@application.route('/regist')
 def show_new():
 
-    #新規追加画面を表示する
-    return render_template('new_task.html')
+    #新規登録画面を表示する
+    return render_template('resist.html')
 
 @application.route('/new', methods=['POST'])
 def donew():
@@ -56,7 +56,7 @@ def donew():
     con.close()
 
     #新規追加が終わったら、一覧画面へジャンプする
-    return redirect('http://localhost:8080/todo')
+    return redirect('http://localhost:8080/')
 
 #編集画面を表示する。
 #task_idでtodoテーブルから情報を取得して、画面に埋め込む。
@@ -102,7 +102,7 @@ def doedit():
     con.close()
 
     #編集が終わったら、一覧画面へジャンプする
-    return redirect('http://localhost:8080/todo')
+    return redirect('http://localhost:8080/')
 
 #タスクを削除する
 @application.route('/delete/<task_id>')
@@ -122,5 +122,5 @@ def delete_item(task_id=None):
     db.close()
     con.close()
     #編集が終わったら、一覧画面へジャンプする
-    return redirect('http://localhost:8080/todo')
+    return redirect('http://localhost:8080/')
 pass
