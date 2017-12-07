@@ -9,31 +9,40 @@ def index():
     #ログイン画面にリダイレクトさせる
     return redirect('http://localhost:8080/login')
 
-@application.route('/login') #ログイン画面>> SQLとその値の渡し方？が面倒そう。。。
-def top():
+@application.route('/login') #ログイン画面表示
+def show_login():
 
-    loginid = request.form['loginid']
+    #login画面を表示するためにlogin.htmlに飛ばす
+    return render_template('login.html')
+
+@application.route('/login', methods=['POST']) #ログイン処理 >> SQLとその値の渡し方に注意
+def dologin():
+
+    loginid = request.form['loginid'] #request.form['']の''の中にhtml内にあるname要素のloginidから値をゲット。
     password = request.form['password']
 
-    #mysqlに接続する 　以下のdbとconは変数
+    #mysqlに接続する。dbはMySQLdbのオフジェクト変数。conはオブジェクト変数dbにメソッドを使って別のオブジェクトに
     db = MySQLdb.connect( user='root', passwd='Karinon04011006@', host='localhost', db='tukutter_db', charset='utf8')
     con = db.cursor()
 
-    #全部のlogin_idを取得する？
-    sql = 'select ' #受け取ったloginidがDBにあるかどうか探す？
-    con.execute(sql)
-
-    #値を2次元配列で取得。
-    result = con.fetchall()
+    #受け取ったuseridのパスワードをsql変数に代入してコミットする
+    sql = 'select user_pass from user where login_id = %s' #ここはsqlに文字列としてSQL文を投げてるだけ。
+    con.execute(sql,[loginid]) #上のSQLを実行する=executeメソッド
+    result = con.fetchone() #受け取ったconオブジェクトの中から配列で１行だけ受け取るメソッドがfetchone()!
 
     #DBの切断
     db.close()
     con.close()
 
-    #一覧のデータを？.htmlに渡して、ループで表示させる
-    return render_template('login.html')
+    if password == result[0]:
+        #loginidとpasswordが一致していればindex.htmlに飛ばす
+        return render_template('index.html')
 
-@application.route('/regist') #ユーザー登録画面
+    else:
+        #passwordが一致してなければlogin.htmlに戻す
+        return render_template('login.html')
+
+@application.route('/regist') #ユーザー登録画面表示
 def show_new():
 
     #新規登録画面を表示する
