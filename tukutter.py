@@ -1,21 +1,25 @@
 import MySQLdb
-from flask import Flask, render_template,request,redirect
+from flask import Flask, render_template,request,redirect,make_response
 
 application = Flask(__name__)
 
-@application.route('/') #トップ画面
+
+@application.route('/') #トップ画面>> /loginにリダイレクトさせる（済）
 def index():
 
     #ログイン画面にリダイレクトさせる
     return redirect('http://localhost:8080/login')
 
-@application.route('/login') #ログイン画面表示
+
+@application.route('/login') #ログイン画面表示（済）
 def show_login():
 
     #login画面を表示するためにlogin.htmlに飛ばす
     return render_template('login.html')
 
-@application.route('/login', methods=['POST']) #ログイン処理 >> SQLとその値の渡し方に注意
+
+#ログイン処理 >> SQLとその値の渡し方に注意（済）
+@application.route('/login', methods=['POST'])
 def dologin():
 
     loginid = request.form['loginid'] #request.form['']の''の中にhtml内にあるname要素のloginidから値をゲット。
@@ -28,27 +32,34 @@ def dologin():
     #受け取ったuseridのパスワードをsql変数に代入してコミットする
     sql = 'select user_pass from user where login_id = %s' #ここはsqlに文字列としてSQL文を投げてるだけ。
     con.execute(sql,[loginid]) #上のSQLを実行する=executeメソッド
-    result = con.fetchone() #受け取ったconオブジェクトの中から配列で１行だけ受け取るメソッドがfetchone()!
+    result = con.fetchone() #受け取ったconオブジェクトの中から配列で１行だけ受け取るメソッドがfetchone()
 
     #DBの切断
     db.close()
     con.close()
 
     if password == result[0]:
-        #loginidとpasswordが一致していればindex.htmlに飛ばす
-        return render_template('index.html')
+        #loginidとpasswordが一致していれば以下の処理をして
+        #飛ばす前にブラウザにcookie保存して、respにredirectごと突っ込んでそのままtopに飛ばすadvice下路さん
+        resp = make_response(redirect('http://localhost:8080/top'))
+        resp.set_cookie('loginid', loginid)
+
+        return resp
 
     else:
         #passwordが一致してなければlogin.htmlに戻す
         return render_template('login.html')
 
-@application.route('/regist') #ユーザー登録画面表示
+
+@application.route('/regist') #ユーザー登録画面表示（済）
 def show_new():
 
     #新規登録画面を表示する
     return render_template('registration.html')
 
-@application.route('/regist', methods=['POST']) #新規ユーザー登録処理>上の('/regist')とは違うのでOK add1206
+
+#新規ユーザー登録処理>上の('/regist')とは違う。値を受けとって処理をするメソッド <<add1206（済）
+@application.route('/regist', methods=['POST'])
 def donew():
 
     #まずはformの値から、本文を取得する>>スライド03-10>POST値の取得 << add17120620:30
@@ -72,17 +83,42 @@ def donew():
     #新規追加が終わったらログイン画面に飛ぶ
     return render_template('login.html')
 
-#profile編集画面を表示する。
-#useridでuserテーブルから情報を取得して、画面に埋め込む。
+
+#Top画面表示 >ログインしてる人がフォローしてる人の呟きだけ表示（作業中）
+@application.route('/top')
+def show_top():
+
+    #mysqlに接続する >>import MySQLdbのオブジェクト変数:db
+    db = MySQLdb.connect( user='root', passwd='Karinon04011006@', host='localhost', db='tukutter_db', charset='utf8')
+    con = db.cursor() #import MySQLdbのメソッド:cursor()
+
+    loginid = request.cookies.get('login', None) #cookieをとってくる
+
+    #フォローしてる人のつぶやきを表示する
+    sql = 'select user.user_name,follow.follower_id,tweet.tweet_comment from follow inner join user on follow.follower_id = user.id inner join tweet on follow.follower_id=tweet.user_id where follower_id=%s'
+    con.execute(sql,[loginid])
+
+    #値を2次元配列で取得。
+    result = con.fetchall()
+
+    #DBの切断
+    db.close()
+    con.close()
+
+    #user.user_name,folllow.follower_id,tweet.tweet_comment
+    return render_template('top.html', rows=result)
+
+
+#profile編集画面を表示する。useridでuserテーブルから情報を取得して、画面に埋め込む。
 @application.route('/edit/<_id>')
-def show_edit(userid = None):
+def show_proedit(userid = None):
 
     #mysqlに接続する
     db = MySQLdb.connect( user='root', passwd='Karinon04011006@', host='localhost', db='tukutter_db', charset='utf8')
     con = db.cursor()
 
-    #useridをたよりuserの内容を取得する
-    sql = "SELECT * FROM todo WHERE id LIKE %s"
+    #useridを繋げてuserの内容を取得する
+    sql = "SELECT * FROM user WHERE user_id LIKE %s"
     con.execute(sql,[userid])
     result = con.fetchall()
 
@@ -95,8 +131,9 @@ def show_edit(userid = None):
     #編集画面を表示する
     return render_template('profile_edit.html',userid=userid,user=user)
 
-@application.route('/edit', methods=['POST']) #profile_edit.htmlに入力された値を渡す処理
-def doedit():
+#profile編集画面を表示し入力値を受け取って処理する
+@application.route('/edit', methods=['POST']) #profile_edit.htmlに入力された値を渡す処理（未）
+def doproedit():
 
     #まずはformの値から、idと本文を取得する
     userid = request.form['userid']
@@ -106,7 +143,7 @@ def doedit():
     db = MySQLdb.connect( user='root', passwd='Karinon04011006@', host='localhost', db='tukutter_db', charset='utf8')
     con = db.cursor()
 
-    #idをたよりに、新しく変更されたuserの内容をupdateする
+    #idから新しく変更されたuserの内容をupdateする
     sql = 'UPDATE user SET task = %s WHERE id = %s'
     con.execute(sql,[task,task_id])
     db.commit()
@@ -119,7 +156,7 @@ def doedit():
     return redirect('http://localhost:8080/profile')
 
 #userを削除する>>退会処理？
-@application.route('/delete/<userid>')
+@application.route('/delete/<userid>') #useridを消す？フラグを立てるだけ？(未)
 def delete_item(userid=None):
 
     #mysqlに接続する
@@ -129,7 +166,7 @@ def delete_item(userid=None):
     #delete文をつかってidをたよりに、userの行を削除する
     sql = 'DELETE FROM user WHERE id=%s'
 
-    con.execute(sql,[userid]) #変数はクォーテーションを外すのを忘れずに、あと（）閉じも忘れずに
+    con.execute(sql,[userid]) #変数はクォーテーションを外すのを忘れずにあと()閉じも忘れずに
     db.commit()
 
     #DBの切断
@@ -137,4 +174,6 @@ def delete_item(userid=None):
     con.close()
     #編集が終わったら、ログイン画面へジャンプする
     return redirect('http://localhost:8080/login')
+
+
 pass
