@@ -30,9 +30,10 @@ def dologin():
     con = db.cursor()
 
     #受け取ったuseridのパスワードをsql変数に代入してコミットする
-    sql = 'select user_pass from user where login_id = %s' #ここはsqlに文字列としてSQL文を投げてるだけ。
+    sql = 'select user_pass,user_name from user where login_id = %s' #ここはsqlに文字列としてSQL文を投げてるだけ。
     con.execute(sql,[loginid]) #上のSQLを実行する=executeメソッド
     result = con.fetchone() #受け取ったconオブジェクトの中から配列で１行だけ受け取るメソッドがfetchone()
+    username = result[1]
 
     #DBの切断
     db.close()
@@ -43,7 +44,9 @@ def dologin():
         #飛ばす前にブラウザにcookie保存して、respにredirectごと突っ込んでそのままtopに飛ばすadvice下路さん
         resp = make_response(redirect('http://localhost:8080/top'))
         resp.set_cookie('loginid', loginid)
+        resp.set_cookie('username',result[1])
 
+        print(result[1])
         return resp
 
     else:
@@ -84,7 +87,7 @@ def donew():
     return render_template('login.html')
 
 
-#Top画面表示 >ログインしてる人がフォローしてる人の呟きだけ表示（作業中）
+#Top画面表示 >ログインしてる人がフォローしてる人の呟きだけ表示（確認中）
 @application.route('/top')
 def show_top():
 
@@ -92,7 +95,9 @@ def show_top():
     db = MySQLdb.connect( user='root', passwd='Karinon04011006@', host='localhost', db='tukutter_db', charset='utf8')
     con = db.cursor() #import MySQLdbのメソッド:cursor()
 
-    loginid = request.cookies.get('login', None) #cookieをとってくる
+    loginid = request.cookies.get('loginid', None) #cookieをとってくる
+    #username = request.cookies.get('username', None) #cookieからもらったusernameをセットする
+
 
     #フォローしてる人のつぶやきを表示する
     sql = 'select user.user_name,follow.follower_id,tweet.tweet_comment from follow inner join user on follow.follower_id = user.id inner join tweet on follow.follower_id=tweet.user_id where follower_id=%s'
@@ -100,16 +105,21 @@ def show_top():
 
     #値を2次元配列で取得。
     result = con.fetchall()
+    html = render_template('top.html',username=request.cookies.get('username', None),rows=result)
 
     #DBの切断
     db.close()
     con.close()
 
-    #user.user_name,folllow.follower_id,tweet.tweet_comment
-    return render_template('top.html', rows=result)
+    print(loginid)
+    
+    print(html)
+    #user.user_name,folllow.follower_id,tweet.tweet_commentをresultに突っ込んでる
+
+    return html
 
 
-#profile編集画面を表示する。useridでuserテーブルから情報を取得して、画面に埋め込む。
+#profile編集画面を表示する。useridでuserテーブルから情報を取得して、画面に埋め込む。(未)
 @application.route('/edit/<_id>')
 def show_proedit(userid = None):
 
@@ -132,7 +142,7 @@ def show_proedit(userid = None):
     return render_template('profile_edit.html',userid=userid,user=user)
 
 #profile編集画面を表示し入力値を受け取って処理する
-@application.route('/edit', methods=['POST']) #profile_edit.htmlに入力された値を渡す処理（未）
+@application.route('/edit', methods=['POST']) #profile_edit.htmlに入力された値を渡す処理(未)
 def doproedit():
 
     #まずはformの値から、idと本文を取得する
