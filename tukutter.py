@@ -30,10 +30,11 @@ def dologin():
     con = db.cursor()
 
     #受け取ったuseridのパスワードをsql変数に代入してコミットする
-    sql = 'select user_pass,user_name from user where login_id = %s' #ここはsqlに文字列としてSQL文を投げてるだけ。
+    sql = 'select user_pass,user_name,user.id from user where login_id = %s' #ここはsqlに文字列としてSQL文を投げてるだけ。
     con.execute(sql,[loginid]) #上のSQLを実行する=executeメソッド
     result = con.fetchone() #受け取ったconオブジェクトの中から配列で１行だけ受け取るメソッドがfetchone()
     username = result[1]
+    userid = result[2]
 
     #DBの切断
     db.close()
@@ -41,12 +42,11 @@ def dologin():
 
     if password == result[0]:
         #loginidとpasswordが一致していれば以下の処理をして
-        #飛ばす前にブラウザにcookie保存して、respにredirectごと突っ込んでそのままtopに飛ばすadvice下路さん
+        #飛ばす前にブラウザにcookie保存して、respにredirectごと突っ込んでそのままtopに飛ばすadvice下地さん
         resp = make_response(redirect('http://localhost:8080/top'))
-        resp.set_cookie('loginid', loginid)
-        resp.set_cookie('username',result[1])
-
-        print(result[1])
+        resp.set_cookie('loginid', loginid) #クッキーのloginid項目にloginidをセットする
+        resp.set_cookie('username',result[1]) #クッキーのusername項目にusernameをセットする
+        resp.set_cookie('userid',str(result[2])) #クッキーのuserid項目にuseridをセットする（1213追加）
         return resp
 
     else:
@@ -66,6 +66,7 @@ def show_new():
 def donew():
 
     #まずはformの値から、本文を取得する>>スライド03-10>POST値の取得 << add17120620:30
+    #userid = requst.form
     loginid = request.form['loginid']
     username = request.form['username']
     password = request.form['password']
@@ -87,7 +88,7 @@ def donew():
     return render_template('login.html')
 
 
-#Top画面表示 >ログインしてる人がフォローしてる人の呟きだけ表示（確認中）
+#Top画面表示 >ログインしてる人がフォローしてる人の呟きだけ表示（作業中）
 @application.route('/top')
 def show_top():
 
@@ -95,26 +96,25 @@ def show_top():
     db = MySQLdb.connect( user='root', passwd='Karinon04011006@', host='localhost', db='tukutter_db', charset='utf8')
     con = db.cursor() #import MySQLdbのメソッド:cursor()
 
-    loginid = request.cookies.get('loginid', None) #cookieをとってくる
-    #username = request.cookies.get('username', None) #cookieからもらったusernameをセットする
-
+    userid = request.cookies.get('userid', None) #cookieをとってくる
 
     #フォローしてる人のつぶやきを表示する
     sql = 'select user.user_name,follow.follower_id,tweet.tweet_comment from follow inner join user on follow.follower_id = user.id inner join tweet on follow.follower_id=tweet.user_id where follower_id=%s'
-    con.execute(sql,[loginid])
+    #sql = 'select follow.follower_id from follow where follower_id=%s'
+    con.execute(sql,[userid])
 
     #値を2次元配列で取得。
     result = con.fetchall()
+
+    #cookieのusernameを変数usernameに代入して、user.user_name,folllow.follower_id,tweet.tweet_commentをresultに突っ込む
+    #それらをtop.htmlに渡して変数htmlに代入してる。（htmlファイルに置換して書き込む）
     html = render_template('top.html',username=request.cookies.get('username', None),rows=result)
 
     #DBの切断
     db.close()
     con.close()
-
-    print(loginid)
-    
-    print(html)
-    #user.user_name,folllow.follower_id,tweet.tweet_commentをresultに突っ込んでる
+    #print(userid)
+    #print(result)
 
     return html
 
