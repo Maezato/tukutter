@@ -1,0 +1,30 @@
+{% extends "layout.html" %}
+
+{% block title %} top {% endblock %}
+
+{% block body %}
+  {% for row in rows %}
+  <div class="stream">
+    <div class="content">
+      <div class="stream-header">
+        <a href=""><img src="http://localhost:8080/static/img/profile.png" alt=""></a>
+        <p>
+          <a href=""><span class="user-name">{{row[0]}}</span></a>
+          <span class="tweet-time">2017/11/22/ 16:20</span>
+          <span class="follow">フォロー中</span>
+        </p>
+      </div>
+      <div class="inline">
+        <div class="stream-content">
+          <p>{{rows[2]}}</p>
+        </div>
+        <div class="stream-footer">
+          <div class="favorite">
+            <a href="#"><img src="img/logo-pic.png" alt=""></a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+{% endblock %}

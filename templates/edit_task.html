@@ -1,0 +1,15 @@
+{% extends "layout.html" %}
+
+{% block title %}
+{{task_id}}番目のタスクを編集
+{% endblock %}
+
+{% block body %}
+
+<form action="/edit" method="post">
+  <input type="text" name="task_id" value="{{task_id}}" size="100" maxlength="100">
+  <input type="text" name="task" value="{{task}}" size="100" maxlength="100">
+  <input type="submit" name="save" value="save">
+</form>
+
+{% endblock %}

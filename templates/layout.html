@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <link href="https://fonts.googleapis.com/css?family=Abel" rel="stylesheet">
+  <link rel="stylesheet" href="http://localhost:8080/static/css/reset.min.css">
+  <link rel="stylesheet" href="http://localhost:8080/static/css/main.min.css">
+  <link rel="stylesheet" href="http://localhost:8080/static/css/index.min.css">
+  <script src="https://code.jquery.com/jquery-3.2.1.min.js" integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4=" crossorigin="anonymous"></script>
+  <script type="text/javascript" src="js/index.js"></script>
+  <title>tukutter | {% block title %}{% endblock %}</title>
+</head>
+<body>
+  <main id="index">
+    <header>
+      <div class="profile">
+        <a href=""><img src="http://localhost:8080/static/img/profile.png" alt=""></a>
+        <a href=""><p>{{username}}</p></a>
+      </div>
+      <nav>
+        <ul>
+          <li><a href="top.html">top</a></li>
+          <li><a href="search.html">検索</a></li>
+          <li><a href="tweet.html">つぶやく</a></li>
+          <li><a href="favorite.html">お気に入り</a></li>
+          <li><a href="#">ログアウト</a></li>
+        </ul>
+      </nav>
+    </header>
+
+    {% block body %}<!-- 中身を入れる　-->{% endblock %}
+
+   </div>
+  </main>
+ </body>
+</html>

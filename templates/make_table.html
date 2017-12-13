@@ -1,0 +1,21 @@
+{% extends "layout.html" %}
+
+{% block title %}
+一覧
+{% endblock %}
+
+{% block body %}
+
+<table border="1">
+<a href="/new">追加する</a>
+{% for row in rows %}
+  <tr>
+    <td>{{row[1]}}<td>
+    <td><a href="/edit/{{row[0]}}">詳細見る</a></td>
+    <td><a href="/delete/{{row[0]}}">削除</a></td>
+  </tr>
+ {% endfor %}
+
+</table>
+
+{% endblock %}

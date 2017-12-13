@@ -1,0 +1,12 @@
+{% extends "layout.html" %}
+
+{% block title %}
+タスク：{{item[1]}}
+{% endblock %}
+
+{% block body %}
+
+<a href="/edit/{{item[0]}}">編集する</a>
+<a href="/delete/{{item[0]}}">削除する</a>
+
+{% endblock %}
